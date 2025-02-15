@@ -39,6 +39,7 @@ add_subdirectory(scasm)
 add_subdirectory(lexer)
 add_subdirectory(parser)
 add_subdirectory(codegen)
+add_subdirectory(parser_bison)
 
 set(SOURCES ./driver/driver.cc)
 
