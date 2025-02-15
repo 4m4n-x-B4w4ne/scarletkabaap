@@ -1,4 +1,6 @@
 %{
+#include <stdio.h>
+
 int yylex();
 void yyerror(const char* s);
 %}
@@ -33,6 +35,9 @@ void yyerror(const char* s);
 /* Rest of your grammar rules remain the same */
 program
     : /* empty */
+    {
+        printf("got an empty function");
+    }
     | program declaration
     ;
 
