@@ -15,7 +15,7 @@ void get_tokens(std::string file_path){
     lexer->set_file_path(std::move(file_path));
     lexer->tokenize();
     tokens = lexer->get_tokens();
-    std::cout << "GOT THEM SWEET TOKENS :))))" << std::endl;
+    
 }
 
 int yylex() {

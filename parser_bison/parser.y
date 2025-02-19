@@ -428,6 +428,9 @@ external_declaration
 
 function_definition
     : declaration_specifiers declarator declaration_list compound_statement
+    {
+        printf("got them sweet victory");
+    }
     | declaration_specifiers declarator compound_statement
     | declarator declaration_list compound_statement
     | declarator compound_statement
