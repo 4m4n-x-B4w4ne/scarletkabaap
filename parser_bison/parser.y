@@ -5,152 +5,432 @@ int yylex();
 void yyerror(const char* s);
 %}
 
-%token IDENTIFIER CONSTANT
-%token INT STATIC EXTERN VOID
-%token RETURN IF ELSE DO WHILE FOR BREAK CONTINUE
+/* Keep all original tokens and add your specific ones */
+%token IDENTIFIER CONSTANT STRING
+%token CHARACTER_CONSTANT CHAR_ARR  /* Your additional constant types */
+%token INT LONG UNSIGNED SIGNED DOUBLE CHAR VOID STRUCT 
+%token STATIC EXTERN AUTO REGISTER TYPEDEF CONST VOLATILE
+%token RETURN IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK
+%token SIZEOF ENUM UNION CASE DEFAULT ELLIPSIS
 %token OPEN_PARANTHESES CLOSE_PARANTHESES OPEN_BRACE CLOSE_BRACE
+%token OPEN_BRACKET CLOSE_BRACKET
 %token SEMICOLON COLON COMMA QUESTION_MARK
+%token DOT ARROW_OPERATOR  /* Your ARROW_OPERATOR */
 %token TILDE HYPHEN PLUS ASTERISK FORWARD_SLASH PERCENT_SIGN
+%token AAND PIPE CARET  /* Original bitwise operators kept */
+%token INCREMENT_OPERATOR DECREMENT_OPERATOR  /* Your increment/decrement */
+%token LEFT_SHIFT RIGHT_SHIFT
 %token ASSIGNMENT
+%token COMPOUND_SUM COMPOUND_DIFFERENCE COMPOUND_PRODUCT COMPOUND_DIVISION
+%token COMPOUND_REMAINDER COMPOUND_LEFTSHIFT COMPOUND_RIGHTSHIFT
+%token COMPOUND_AND COMPOUND_XOR COMPOUND_OR
 %token NOT LAND LOR
 %token EQUAL NOTEQUAL LESSTHAN GREATERTHAN LESSTHANEQUAL GREATERTHANEQUAL
 
-/* Operator precedence and associativity */
 %precedence THEN
 %precedence ELSE
 
-%right ASSIGNMENT
-%right COLON
-%right QUESTION_MARK
-%left LOR
-%left LAND
-%left EQUAL NOTEQUAL
-%left LESSTHAN GREATERTHAN LESSTHANEQUAL GREATERTHANEQUAL
-%left PLUS HYPHEN
-%left ASTERISK FORWARD_SLASH PERCENT_SIGN
-%precedence UNARY_MINUS UNARY_NOT UNARY_TILDE
+%start translation_unit
 
 %%
 
-/* Rest of your grammar rules remain the same */
-program
-    : /* empty */
-    {
-        printf("got an empty function");
-    }
-    | program declaration
+primary_exp
+    : IDENTIFIER
+    | CONSTANT
+    | CHARACTER_CONSTANT  /* Added your constant type */
+    | CHAR_ARR           /* Added your constant type */
+    | STRING
+    | OPEN_PARANTHESES exp CLOSE_PARANTHESES
     ;
 
-declaration
-    : variable_declaration
-    | function_declaration
+postfix_exp
+    : primary_exp
+    | postfix_exp OPEN_BRACKET exp CLOSE_BRACKET
+    | postfix_exp OPEN_PARANTHESES CLOSE_PARANTHESES
+    | postfix_exp OPEN_PARANTHESES argument_exp_list CLOSE_PARANTHESES
+    | postfix_exp DOT IDENTIFIER
+    | postfix_exp ARROW_OPERATOR IDENTIFIER
+    | postfix_exp INCREMENT_OPERATOR
+    | postfix_exp DECREMENT_OPERATOR
     ;
 
-variable_declaration
-    : specifiers IDENTIFIER SEMICOLON
-    | specifiers IDENTIFIER ASSIGNMENT exp SEMICOLON
+argument_exp_list
+    : assignment_exp
+    | argument_exp_list COMMA assignment_exp
     ;
 
-function_declaration
-    : specifiers IDENTIFIER OPEN_PARANTHESES param_list CLOSE_PARANTHESES SEMICOLON
-    | specifiers IDENTIFIER OPEN_PARANTHESES param_list CLOSE_PARANTHESES block
+unary_exp
+    : postfix_exp
+    | INCREMENT_OPERATOR unary_exp
+    | DECREMENT_OPERATOR unary_exp
+    | unary_operator cast_exp
+    | SIZEOF unary_exp
+    | SIZEOF OPEN_PARANTHESES type_name CLOSE_PARANTHESES
     ;
 
-specifiers
-    : specifier
-    | specifiers specifier
+unary_operator
+    : AAND
+    | ASTERISK
+    | PLUS
+    | HYPHEN
+    | TILDE
+    | NOT
     ;
 
-specifier
-    : INT
-    | STATIC
-    | EXTERN
+cast_exp
+    : unary_exp
+    | OPEN_PARANTHESES type_name CLOSE_PARANTHESES cast_exp
     ;
 
-param_list
-    : VOID
-    | INT IDENTIFIER param_list_tail
+multiplicative_exp
+    : cast_exp
+    | multiplicative_exp ASTERISK cast_exp
+    | multiplicative_exp FORWARD_SLASH cast_exp
+    | multiplicative_exp PERCENT_SIGN cast_exp
     ;
 
-param_list_tail
-    : /* empty */
-    | COMMA INT IDENTIFIER param_list_tail
+additive_exp
+    : multiplicative_exp
+    | additive_exp PLUS multiplicative_exp
+    | additive_exp HYPHEN multiplicative_exp
     ;
 
-block
-    : OPEN_BRACE CLOSE_BRACE
-    | OPEN_BRACE block_items CLOSE_BRACE
+shift_exp
+    : additive_exp
+    | shift_exp LEFT_SHIFT additive_exp
+    | shift_exp RIGHT_SHIFT additive_exp
     ;
 
-block_items
-    : block_item
-    | block_items block_item
+relational_exp
+    : shift_exp
+    | relational_exp LESSTHAN shift_exp
+    | relational_exp GREATERTHAN shift_exp
+    | relational_exp LESSTHANEQUAL shift_exp
+    | relational_exp GREATERTHANEQUAL shift_exp
     ;
 
-block_item
-    : statement
-    | declaration
+equality_exp
+    : relational_exp
+    | equality_exp EQUAL relational_exp
+    | equality_exp NOTEQUAL relational_exp
     ;
 
-for_init
-    : variable_declaration
-    | SEMICOLON
-    | exp SEMICOLON
+and_exp
+    : equality_exp
+    | and_exp AAND equality_exp
     ;
 
-statement
-    : RETURN exp SEMICOLON
-    | exp SEMICOLON
-    | IF OPEN_PARANTHESES exp CLOSE_PARANTHESES statement %prec THEN
-    | IF OPEN_PARANTHESES exp CLOSE_PARANTHESES statement ELSE statement
-    | block
-    | BREAK SEMICOLON
-    | CONTINUE SEMICOLON
-    | WHILE OPEN_PARANTHESES exp CLOSE_PARANTHESES statement
-    | DO statement WHILE OPEN_PARANTHESES exp CLOSE_PARANTHESES SEMICOLON
-    | FOR OPEN_PARANTHESES for_init exp_opt SEMICOLON exp_opt CLOSE_PARANTHESES statement
-    | SEMICOLON
+exclusive_or_exp
+    : and_exp
+    | exclusive_or_exp CARET and_exp
     ;
 
-exp_opt
-    : /* empty */
-    | exp
+inclusive_or_exp
+    : exclusive_or_exp
+    | inclusive_or_exp PIPE exclusive_or_exp
+    ;
+
+logical_and_exp
+    : inclusive_or_exp
+    | logical_and_exp LAND inclusive_or_exp
+    ;
+
+logical_or_exp
+    : logical_and_exp
+    | logical_or_exp LOR logical_and_exp
+    ;
+
+conditional_exp
+    : logical_or_exp
+    | logical_or_exp QUESTION_MARK exp COLON conditional_exp
+    ;
+
+assignment_exp
+    : conditional_exp
+    | unary_exp assignment_operator assignment_exp
+    ;
+
+assignment_operator
+    : ASSIGNMENT
+    | COMPOUND_SUM
+    | COMPOUND_DIFFERENCE
+    | COMPOUND_PRODUCT
+    | COMPOUND_DIVISION
+    | COMPOUND_REMAINDER
+    | COMPOUND_LEFTSHIFT
+    | COMPOUND_RIGHTSHIFT
+    | COMPOUND_AND
+    | COMPOUND_XOR
+    | COMPOUND_OR
     ;
 
 exp
-    : factor
-    | HYPHEN exp %prec UNARY_MINUS
-    | TILDE exp %prec UNARY_TILDE
-    | NOT exp %prec UNARY_NOT
-    | exp PLUS exp
-    | exp HYPHEN exp
-    | exp ASTERISK exp
-    | exp FORWARD_SLASH exp
-    | exp PERCENT_SIGN exp
-    | exp LAND exp
-    | exp LOR exp
-    | exp EQUAL exp
-    | exp NOTEQUAL exp
-    | exp LESSTHAN exp
-    | exp LESSTHANEQUAL exp
-    | exp GREATERTHAN exp
-    | exp GREATERTHANEQUAL exp
-    | exp ASSIGNMENT exp
-    | exp QUESTION_MARK exp COLON exp
+    : assignment_exp
+    | exp COMMA assignment_exp
     ;
 
-factor
-    : CONSTANT
-    | IDENTIFIER
-    | OPEN_PARANTHESES exp CLOSE_PARANTHESES
-    | IDENTIFIER OPEN_PARANTHESES CLOSE_PARANTHESES
-    | IDENTIFIER OPEN_PARANTHESES argument_list CLOSE_PARANTHESES
+constant_exp
+    : conditional_exp
     ;
 
-argument_list
-    : exp
-    | argument_list COMMA exp
+declaration
+    : declaration_specifiers SEMICOLON
+    | declaration_specifiers init_declarator_list SEMICOLON
+    ;
+
+declaration_specifiers
+    : storage_class_specifier
+    | storage_class_specifier declaration_specifiers
+    | type_specifier
+    | type_specifier declaration_specifiers
+    | type_qualifier
+    | type_qualifier declaration_specifiers
+    ;
+
+init_declarator_list
+    : init_declarator
+    | init_declarator_list COMMA init_declarator
+    ;
+
+init_declarator
+    : declarator
+    | declarator ASSIGNMENT initializer
+    ;
+
+storage_class_specifier
+    : TYPEDEF
+    | EXTERN
+    | STATIC
+    | AUTO
+    | REGISTER
+    ;
+
+type_specifier
+    : VOID
+    | CHAR
+    | INT
+    | LONG
+    | SIGNED
+    | UNSIGNED
+    | DOUBLE
+    | struct_or_union_specifier
+    | enum_specifier
+    ;
+
+struct_or_union_specifier
+    : struct_or_union IDENTIFIER OPEN_BRACE struct_declaration_list CLOSE_BRACE
+    | struct_or_union OPEN_BRACE struct_declaration_list CLOSE_BRACE
+    | struct_or_union IDENTIFIER
+    ;
+
+struct_or_union
+    : STRUCT
+    | UNION
+    ;
+
+struct_declaration_list
+    : struct_declaration
+    | struct_declaration_list struct_declaration
+    ;
+
+struct_declaration
+    : specifier_qualifier_list struct_declarator_list SEMICOLON
+    ;
+
+specifier_qualifier_list
+    : type_specifier specifier_qualifier_list
+    | type_specifier
+    | type_qualifier specifier_qualifier_list
+    | type_qualifier
+    ;
+
+struct_declarator_list
+    : struct_declarator
+    | struct_declarator_list COMMA struct_declarator
+    ;
+
+struct_declarator
+    : declarator
+    | COLON constant_exp
+    | declarator COLON constant_exp
+    ;
+
+enum_specifier
+    : ENUM OPEN_BRACE enumerator_list CLOSE_BRACE
+    | ENUM IDENTIFIER OPEN_BRACE enumerator_list CLOSE_BRACE
+    | ENUM IDENTIFIER
+    ;
+
+enumerator_list
+    : enumerator
+    | enumerator_list COMMA enumerator
+    ;
+
+enumerator
+    : IDENTIFIER
+    | IDENTIFIER ASSIGNMENT constant_exp
+    ;
+
+type_qualifier
+    : CONST
+    | VOLATILE
+    ;
+
+declarator
+    : pointer direct_declarator
+    | direct_declarator
+    ;
+
+direct_declarator
+    : IDENTIFIER
+    | OPEN_PARANTHESES declarator CLOSE_PARANTHESES
+    | direct_declarator OPEN_BRACKET constant_exp CLOSE_BRACKET
+    | direct_declarator OPEN_BRACKET CLOSE_BRACKET
+    | direct_declarator OPEN_PARANTHESES parameter_type_list CLOSE_PARANTHESES
+    | direct_declarator OPEN_PARANTHESES identifier_list CLOSE_PARANTHESES
+    | direct_declarator OPEN_PARANTHESES CLOSE_PARANTHESES
+    ;
+
+pointer
+    : ASTERISK
+    | ASTERISK type_qualifier_list
+    | ASTERISK pointer
+    | ASTERISK type_qualifier_list pointer
+    ;
+
+type_qualifier_list
+    : type_qualifier
+    | type_qualifier_list type_qualifier
+    ;
+
+parameter_type_list
+    : parameter_list
+    | parameter_list COMMA ELLIPSIS
+    ;
+
+parameter_list
+    : parameter_declaration
+    | parameter_list COMMA parameter_declaration
+    ;
+
+parameter_declaration
+    : declaration_specifiers declarator
+    | declaration_specifiers abstract_declarator
+    | declaration_specifiers
+    ;
+
+identifier_list
+    : IDENTIFIER
+    | identifier_list COMMA IDENTIFIER
+    ;
+
+type_name
+    : specifier_qualifier_list
+    | specifier_qualifier_list abstract_declarator
+    ;
+
+abstract_declarator
+    : pointer
+    | direct_abstract_declarator
+    | pointer direct_abstract_declarator
+    ;
+
+direct_abstract_declarator
+    : OPEN_PARANTHESES abstract_declarator CLOSE_PARANTHESES
+    | OPEN_BRACKET CLOSE_BRACKET
+    | OPEN_BRACKET constant_exp CLOSE_BRACKET
+    | direct_abstract_declarator OPEN_BRACKET CLOSE_BRACKET
+    | direct_abstract_declarator OPEN_BRACKET constant_exp CLOSE_BRACKET
+    | OPEN_PARANTHESES CLOSE_PARANTHESES
+    | OPEN_PARANTHESES parameter_type_list CLOSE_PARANTHESES
+    | direct_abstract_declarator OPEN_PARANTHESES CLOSE_PARANTHESES
+    | direct_abstract_declarator OPEN_PARANTHESES parameter_type_list CLOSE_PARANTHESES
+    ;
+
+initializer
+    : assignment_exp
+    | OPEN_BRACE initializer_list CLOSE_BRACE
+    | OPEN_BRACE initializer_list COMMA CLOSE_BRACE
+    ;
+
+initializer_list
+    : initializer
+    | initializer_list COMMA initializer
+    ;
+
+statement
+    : labeled_statement
+    | compound_statement
+    | expression_statement
+    | selection_statement
+    | iteration_statement
+    | jump_statement
+    ;
+
+labeled_statement
+    : IDENTIFIER COLON statement
+    | CASE constant_exp COLON statement
+    | DEFAULT COLON statement
+    ;
+
+compound_statement
+    : OPEN_BRACE CLOSE_BRACE
+    | OPEN_BRACE statement_list CLOSE_BRACE
+    | OPEN_BRACE declaration_list CLOSE_BRACE
+    | OPEN_BRACE declaration_list statement_list CLOSE_BRACE
+    ;
+
+declaration_list
+    : declaration
+    | declaration_list declaration
+    ;
+
+statement_list
+    : statement
+    | statement_list statement
+    ;
+
+expression_statement
+    : SEMICOLON
+    | exp SEMICOLON
+    ;
+
+selection_statement
+    : IF OPEN_PARANTHESES exp CLOSE_PARANTHESES statement %prec THEN
+    | IF OPEN_PARANTHESES exp CLOSE_PARANTHESES statement ELSE statement
+    | SWITCH OPEN_PARANTHESES exp CLOSE_PARANTHESES statement
+    ;
+
+iteration_statement
+    : WHILE OPEN_PARANTHESES exp CLOSE_PARANTHESES statement
+    | DO statement WHILE OPEN_PARANTHESES exp CLOSE_PARANTHESES SEMICOLON
+    | FOR OPEN_PARANTHESES expression_statement expression_statement CLOSE_PARANTHESES statement
+    | FOR OPEN_PARANTHESES expression_statement expression_statement exp CLOSE_PARANTHESES statement
+    ;
+
+jump_statement
+    : GOTO IDENTIFIER SEMICOLON
+    | CONTINUE SEMICOLON
+    | BREAK SEMICOLON
+    | RETURN SEMICOLON
+    | RETURN exp SEMICOLON
+    ;
+
+translation_unit
+    : external_declaration
+    | translation_unit external_declaration
+    ;
+
+external_declaration
+    : function_definition
+    | declaration
+    ;
+
+function_definition
+    : declaration_specifiers declarator declaration_list compound_statement
+    | declaration_specifiers declarator compound_statement
+    | declarator declaration_list compound_statement
+    | declarator compound_statement
     ;
 
 %%
-

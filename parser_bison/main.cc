@@ -29,35 +29,79 @@ int yylex() {
     scarlet::token::TOKEN token_type = current_token.get_token();
 
     // Map your token types to Bison token types
-    switch (token_type) {
+   switch (token_type) {
         case scarlet::token::TOKEN::IDENTIFIER:
             return IDENTIFIER;
         case scarlet::token::TOKEN::CONSTANT:
             return CONSTANT;
+        // case scarlet::token::TOKEN::STRING:
+            return STRING;
+        case scarlet::token::TOKEN::CHARACTER_CONSTANT:
+            return CHARACTER_CONSTANT;
+        case scarlet::token::TOKEN::CHAR_ARR:
+            return CHAR_ARR;
         case scarlet::token::TOKEN::INT:
             return INT;
+        case scarlet::token::TOKEN::LONG:
+            return LONG;
+        case scarlet::token::TOKEN::UNSIGNED:
+            return UNSIGNED;
+        case scarlet::token::TOKEN::SIGNED:
+            return SIGNED;
+        // case scarlet::token::TOKEN::DOUBLE:
+            return DOUBLE;
+        case scarlet::token::TOKEN::CHAR:
+            return CHAR;
+        case scarlet::token::TOKEN::VOID:
+            return VOID;
+        case scarlet::token::TOKEN::STRUCT:
+            return STRUCT;
         case scarlet::token::TOKEN::STATIC:
             return STATIC;
         case scarlet::token::TOKEN::EXTERN:
             return EXTERN;
-        case scarlet::token::TOKEN::VOID:
-            return VOID;
+        // case scarlet::token::TOKEN::AUTO:
+        //     return AUTO;
+        // case scarlet::token::TOKEN::REGISTER:
+        //     return REGISTER;
+        // case scarlet::token::TOKEN::TYPEDEF:
+        //     return TYPEDEF;
+        // case scarlet::token::TOKEN::CONST:
+        //     return CONST;
+        // case scarlet::token::TOKEN::VOLATILE:
+        //     return VOLATILE;
         case scarlet::token::TOKEN::RETURN:
             return RETURN;
         case scarlet::token::TOKEN::IF:
             return IF;
         case scarlet::token::TOKEN::ELSE:
             return ELSE;
-        case scarlet::token::TOKEN::DO:
-            return DO;
+        // case scarlet::token::TOKEN::SWITCH:
+            return SWITCH;
         case scarlet::token::TOKEN::WHILE:
             return WHILE;
+        case scarlet::token::TOKEN::DO:
+            return DO;
         case scarlet::token::TOKEN::FOR:
             return FOR;
-        case scarlet::token::TOKEN::BREAK:
-            return BREAK;
+        case scarlet::token::TOKEN::GOTO:
+            return GOTO;
         case scarlet::token::TOKEN::CONTINUE:
             return CONTINUE;
+        case scarlet::token::TOKEN::BREAK:
+            return BREAK;
+        case scarlet::token::TOKEN::SIZEOF:
+            return SIZEOF;
+        // case scarlet::token::TOKEN::ENUM:
+        //     return ENUM;
+        // case scarlet::token::TOKEN::UNION:
+        //     return UNION;
+        // case scarlet::token::TOKEN::CASE:
+        //     return CASE;
+        // case scarlet::token::TOKEN::DEFAULT:
+        //     return DEFAULT;
+        // case scarlet::token::TOKEN::ELLIPSIS:
+        //     return ELLIPSIS;
         case scarlet::token::TOKEN::OPEN_PARANTHESES:
             return OPEN_PARANTHESES;
         case scarlet::token::TOKEN::CLOSE_PARANTHESES:
@@ -66,12 +110,22 @@ int yylex() {
             return OPEN_BRACE;
         case scarlet::token::TOKEN::CLOSE_BRACE:
             return CLOSE_BRACE;
+        case scarlet::token::TOKEN::OPEN_BRACKET:
+            return OPEN_BRACKET;
+        case scarlet::token::TOKEN::CLOSE_BRACKET:
+            return CLOSE_BRACKET;
         case scarlet::token::TOKEN::SEMICOLON:
             return SEMICOLON;
         case scarlet::token::TOKEN::COLON:
             return COLON;
+        case scarlet::token::TOKEN::COMMA:
+            return COMMA;
         case scarlet::token::TOKEN::QUESTION_MARK:
             return QUESTION_MARK;
+        case scarlet::token::TOKEN::DOT:
+            return DOT;
+        case scarlet::token::TOKEN::ARROW_OPERATOR:
+            return ARROW_OPERATOR;
         case scarlet::token::TOKEN::TILDE:
             return TILDE;
         case scarlet::token::TOKEN::HYPHEN:
@@ -84,8 +138,42 @@ int yylex() {
             return FORWARD_SLASH;
         case scarlet::token::TOKEN::PERCENT_SIGN:
             return PERCENT_SIGN;
+        case scarlet::token::TOKEN::AAND:
+            return AAND;
+        // case scarlet::token::TOKEN::PIPE:
+        //     return PIPE;
+        // case scarlet::token::TOKEN::CARET:
+        //     return CARET;
+        case scarlet::token::TOKEN::INCREMENT_OPERATOR:
+            return INCREMENT_OPERATOR;
+        case scarlet::token::TOKEN::DECREMENT_OPERATOR:
+            return DECREMENT_OPERATOR;
+        case scarlet::token::TOKEN::LEFT_SHIFT:
+            return LEFT_SHIFT;
+        case scarlet::token::TOKEN::RIGHT_SHIFT:
+            return RIGHT_SHIFT;
         case scarlet::token::TOKEN::ASSIGNMENT:
             return ASSIGNMENT;
+        case scarlet::token::TOKEN::COMPOUND_SUM:
+            return COMPOUND_SUM;
+        case scarlet::token::TOKEN::COMPOUND_DIFFERENCE:
+            return COMPOUND_DIFFERENCE;
+        case scarlet::token::TOKEN::COMPOUND_PRODUCT:
+            return COMPOUND_PRODUCT;
+        case scarlet::token::TOKEN::COMPOUND_DIVISION:
+            return COMPOUND_DIVISION;
+        case scarlet::token::TOKEN::COMPOUND_REMAINDER:
+            return COMPOUND_REMAINDER;
+        case scarlet::token::TOKEN::COMPOUND_LEFTSHIFT:
+            return COMPOUND_LEFTSHIFT;
+        case scarlet::token::TOKEN::COMPOUND_RIGHTSHIFT:
+            return COMPOUND_RIGHTSHIFT;
+        case scarlet::token::TOKEN::COMPOUND_AND:
+            return COMPOUND_AND;
+        case scarlet::token::TOKEN::COMPOUND_XOR:
+            return COMPOUND_XOR;
+        case scarlet::token::TOKEN::COMPOUND_OR:
+            return COMPOUND_OR;
         case scarlet::token::TOKEN::NOT:
             return NOT;
         case scarlet::token::TOKEN::LAND:
@@ -104,12 +192,11 @@ int yylex() {
             return LESSTHANEQUAL;
         case scarlet::token::TOKEN::GREATERTHANEQUAL:
             return GREATERTHANEQUAL;
-        case scarlet::token::TOKEN::COMMA:
-            return COMMA;
         default:
             return -1;
     }
 }
+// ...existing code...
 
 int main(){
     get_tokens("input.cc");
