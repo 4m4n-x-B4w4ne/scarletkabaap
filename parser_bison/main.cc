@@ -15,7 +15,8 @@ void get_tokens(std::string file_path){
     lexer->set_file_path(std::move(file_path));
     lexer->tokenize();
     tokens = lexer->get_tokens();
-    
+    lexer->print_symbol_table();
+
 }
 
 int yylex() {
@@ -202,5 +203,8 @@ int main(){
     get_tokens("input.cc");
 
     yyparse();
+    for(auto it:symtab){
+        std::cout<<it.first<<" "<<it.second<<std::endl;
+    }
     return 0;
 }

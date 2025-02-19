@@ -1,9 +1,28 @@
 %{
 #include <stdio.h>
+#include <map>
+#include <string>
+#include<string.h>
+
+struct symbolInfo{
+    char* name;
+    char* type;
+};
+
+std::map<std::string,std::string> symtab;
+
+void add_symbol(std::string name, std::string type) {
+    symtab[name] = type;
+}
 
 int yylex();
 void yyerror(const char* s);
 %}
+
+%union {
+    symbolInfo symbol;
+    char* str;
+}
 
 /* Keep all original tokens and add your specific ones */
 %token IDENTIFIER CONSTANT STRING
@@ -27,6 +46,12 @@ void yyerror(const char* s);
 %token NOT LAND LOR
 %token EQUAL NOTEQUAL LESSTHAN GREATERTHAN LESSTHANEQUAL GREATERTHANEQUAL
 
+%type <symbol> translation_unit external_declaration declaration type_specifier 
+%type <symbol> declarator direct_declarator pointer parameter_type_list identifier_list constant_exp
+%type <symbol> enumerator_list enumerator init_declarator_list  storage_class_specifier
+%type <symbol> declaration_specifiers type_qualifier init_declarator
+
+
 %precedence THEN
 %precedence ELSE
 
@@ -34,11 +59,12 @@ void yyerror(const char* s);
 
 %%
 
+//expressions are ok and don't rquire any propagation for now
 primary_exp
     : IDENTIFIER
     | CONSTANT
-    | CHARACTER_CONSTANT  /* Added your constant type */
-    | CHAR_ARR           /* Added your constant type */
+    | CHARACTER_CONSTANT 
+    | CHAR_ARR          
     | STRING
     | OPEN_PARANTHESES exp CLOSE_PARANTHESES
     ;
@@ -172,49 +198,129 @@ exp
 constant_exp
     : conditional_exp
     ;
+// it's just expression till here
 
+//the first rule is int;[which is valid] so does not make sense to even keep an account of type
 declaration
     : declaration_specifiers SEMICOLON
     | declaration_specifiers init_declarator_list SEMICOLON
+    {
+        $2.type = $1.type;
+    }
     ;
 
 declaration_specifiers
     : storage_class_specifier
+    {
+        $$.type = $1.type;
+    }
     | storage_class_specifier declaration_specifiers
+    {
+        $$.type = strcat($1.type,$2.type);
+    }
     | type_specifier
+    {
+        $$.type = $1.type;
+    }
     | type_specifier declaration_specifiers
+    {
+        $$.type = strcat($1.type,$2.type);
+    }
     | type_qualifier
+    {
+        $$.type = $1.type;
+    }
     | type_qualifier declaration_specifiers
+    {
+        $$.type = strcat($1.type,$2.type);
+    }
     ;
 
 init_declarator_list
     : init_declarator
+    {
+        $1.type = $$.type;
+    }
     | init_declarator_list COMMA init_declarator
+    {
+        $1.type = $$.type;
+        $3.type = $$.type;
+    }
     ;
 
 init_declarator
     : declarator
+    {
+        $1.type = $$.type;
+        add_symbol($1.name, $1.type);
+    }
     | declarator ASSIGNMENT initializer
+    {
+        $1.type = $$.type;
+        add_symbol($1.name, $1.type);
+    }
     ;
 
 storage_class_specifier
     : TYPEDEF
+    {
+        $$.type = "typedef";
+    }
     | EXTERN
+    {
+        $$.type = "typedef";
+    }
     | STATIC
+    {
+        $$.type = "typedef";
+    }
     | AUTO
+    {
+        $$.type = "typedef";
+    }
     | REGISTER
+    {
+        $$.type = "typedef";
+    }
     ;
 
 type_specifier
     : VOID
+    {
+        $$.type = "typedef";
+    }
     | CHAR
+    {
+        $$.type = "typedef";
+    }
     | INT
+    {
+        $$.type = "typedef";
+    }
     | LONG
+    {
+        $$.type = "typedef";
+    }
     | SIGNED
+    {
+        $$.type = "typedef";
+    }
     | UNSIGNED
+    {
+        $$.type = "typedef";
+    }
     | DOUBLE
+    {
+        $$.type = "typedef";
+    }
     | struct_or_union_specifier
+    {
+        $$.type = "typedef";
+    }
     | enum_specifier
+    {
+        $$.type = "typedef";
+    }
     ;
 
 struct_or_union_specifier
@@ -429,11 +535,19 @@ external_declaration
 function_definition
     : declaration_specifiers declarator declaration_list compound_statement
     {
-        printf("got them sweet victory");
     }
     | declaration_specifiers declarator compound_statement
+    {
+       
+    }
     | declarator declaration_list compound_statement
+    {
+        
+    }
     | declarator compound_statement
+    {
+        
+    }
     ;
 
 %%
