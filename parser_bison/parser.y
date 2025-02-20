@@ -217,62 +217,31 @@ init_declarator
     ;
 
 storage_class_specifier
-    : TYPEDEF
-    {
-strcat(type_string, " typedef");
-    }
-    | EXTERN
-    {
-strcat(type_string, " extern");    }
-    | STATIC
-    {
-strcat(type_string, " static");    }
-    | AUTO
-    {
-strcat(type_string, " auto");    }
-    | REGISTER
-    {
-strcat(type_string, " register");    }
+    : TYPEDEF{strcat(type_string, " typedef");}
+    | EXTERN{strcat(type_string, " extern");    }
+    | STATIC{strcat(type_string, " static");    }
+    | AUTO{strcat(type_string, " auto");    }
+    | REGISTER{strcat(type_string, " register");    }
     ;
 
 type_specifier
-    : VOID
-    {
-strcat(type_string, " void");    }
-    | CHAR
-    {
-strcat(type_string, " char");    }
-    | INT
-    {
-        strcat(type_string, " int");
-    }
-    | LONG
-    {
-strcat(type_string, " long");    }
-
-    | SIGNED
-    {
-strcat(type_string, " signed");    }
-    | UNSIGNED
-    {
-strcat(type_string, " unsigned");    }
-    | DOUBLE
-    {
-strcat(type_string, " double");    }
+    : VOID{strcat(type_string, " void");    }
+    | CHAR{strcat(type_string, " char");    }
+    | INT{strcat(type_string, " int");    }
+    | LONG{strcat(type_string, " long");    }
+    | SIGNED{strcat(type_string, " signed");    }
+    | UNSIGNED{strcat(type_string, " unsigned");    }
+    | DOUBLE{strcat(type_string, " double");    }
     | struct_or_union_specifier
-    {
-        type_string[0] = '\0';
-    }
     | enum_specifier
-    {
-strcat(type_string, "enum");    }
     ;
 
 struct_or_union_specifier
-    : struct_or_union IDENTIFIER OPEN_BRACE struct_declaration_list CLOSE_BRACE
+    : struct_or_union IDENTIFIER 
     {
         printf("struct, %s\n", identifier);
     }
+    OPEN_BRACE struct_declaration_list CLOSE_BRACE
     | struct_or_union OPEN_BRACE struct_declaration_list CLOSE_BRACE 
     | struct_or_union IDENTIFIER
     {
