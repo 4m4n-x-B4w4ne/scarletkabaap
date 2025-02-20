@@ -10,7 +10,7 @@ void yyerror(const char* s);
 
 char type_string[1000];
 bool type_set = false;
-// extern char* identifier;
+extern const char* identifier;
 %}
 
 %union {
@@ -261,7 +261,8 @@ strcat(type_string, " unsigned");    }
 strcat(type_string, " double");    }
     | struct_or_union_specifier
     {
-strcat(type_string, " struct");    }
+        type_string[0] = '\0';
+    }
     | enum_specifier
     {
 strcat(type_string, "enum");    }
@@ -269,8 +270,14 @@ strcat(type_string, "enum");    }
 
 struct_or_union_specifier
     : struct_or_union IDENTIFIER OPEN_BRACE struct_declaration_list CLOSE_BRACE
-    | struct_or_union OPEN_BRACE struct_declaration_list CLOSE_BRACE
+    {
+        printf("struct, %s\n", identifier);
+    }
+    | struct_or_union OPEN_BRACE struct_declaration_list CLOSE_BRACE 
     | struct_or_union IDENTIFIER
+    {
+        printf("struct, %s\n", identifier);
+    }
     ;
 
 struct_or_union
@@ -285,6 +292,9 @@ struct_declaration_list
 
 struct_declaration
     : specifier_qualifier_list struct_declarator_list SEMICOLON
+    {
+        type_string[0] = '\0';
+    }
     ;
 
 specifier_qualifier_list
@@ -338,7 +348,7 @@ declarator
 direct_declarator
     : IDENTIFIER
     {
-        printf("%s\n", type_string);
+        printf("%s, %s\n", type_string, identifier);
     }
     | OPEN_PARANTHESES declarator CLOSE_PARANTHESES
     {
@@ -509,23 +519,30 @@ external_declaration
     ;
 
 function_definition
-    : declaration_specifiers declarator declaration_list compound_statement
+    : declaration_specifiers declarator 
     {
-        //printf("here finally 1\n");
-    }
-    | declaration_specifiers declarator compound_statement
+        printf("the last one was a function :/ \n");
+        type_string[0] = '\0';
+    } 
+    declaration_list compound_statement
+    | declaration_specifiers declarator
     {
-       //printf("here finally 2\n");
-       //printf("%s", type_string);
-    }
-    | declarator declaration_list compound_statement
+        printf("the last one was a function :/ \n");
+        type_string[0] = '\0';
+    } 
+    compound_statement
+    | declarator 
     {
-        //printf("here finally 3\n");
+        printf("the last one was a function :/ \n");
+        type_string[0] = '\0';
     }
-    | declarator compound_statement
+    declaration_list compound_statement
+    | declarator
     {
-        //printf("here finally 4\n");
-    }
+        printf("the last one was a function :/ \n");
+        type_string[0] = '\0';
+    } 
+    compound_statement
     ;
 
 %%
