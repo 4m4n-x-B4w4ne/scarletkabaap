@@ -38,11 +38,6 @@ bool type_set = false;
 %token NOT LAND LOR
 %token EQUAL NOTEQUAL LESSTHAN GREATERTHAN LESSTHANEQUAL GREATERTHANEQUAL
 
-%type <symbol> translation_unit external_declaration declaration type_specifier 
-%type <symbol> declarator direct_declarator pointer parameter_type_list identifier_list constant_exp
-%type <symbol> enumerator_list enumerator init_declarator_list  storage_class_specifier
-%type <symbol> declaration_specifiers type_qualifier init_declarator
-
 
 %precedence THEN
 %precedence ELSE
@@ -198,8 +193,7 @@ declaration
     | declaration_specifiers init_declarator_list SEMICOLON
     {
         type_set = false;
-        strcpy(type_string, " ");
-        //printf("done mofo");
+        type_string[0] = '\0';
     }
     ;
 
@@ -225,51 +219,52 @@ init_declarator
 storage_class_specifier
     : TYPEDEF
     {
-        strcat(type_string, " typedef");
+strcat(type_string, " typedef");
     }
     | EXTERN
     {
-strcat(type_string, " typedef");    }
+strcat(type_string, " extern");    }
     | STATIC
     {
-strcat(type_string, " typedef");    }
+strcat(type_string, " static");    }
     | AUTO
     {
-strcat(type_string, " typedef");    }
+strcat(type_string, " auto");    }
     | REGISTER
     {
-strcat(type_string, " typedef");    }
+strcat(type_string, " register");    }
     ;
 
 type_specifier
     : VOID
     {
-strcat(type_string, " typedef");    }
+strcat(type_string, " void");    }
     | CHAR
     {
-strcat(type_string, " typedef");    }
+strcat(type_string, " char");    }
     | INT
     {
-        
-strcat(type_string, " typedef");    }
+        strcat(type_string, " int");
+    }
     | LONG
     {
-strcat(type_string, " typedef");    }
+strcat(type_string, " long");    }
+
     | SIGNED
     {
-strcat(type_string, " typedef");    }
+strcat(type_string, " signed");    }
     | UNSIGNED
     {
-strcat(type_string, " typedef");    }
+strcat(type_string, " unsigned");    }
     | DOUBLE
     {
-strcat(type_string, " typedef");    }
+strcat(type_string, " double");    }
     | struct_or_union_specifier
     {
-strcat(type_string, " typedef");    }
+strcat(type_string, " struct");    }
     | enum_specifier
     {
-strcat(type_string, " typedef");    }
+strcat(type_string, "enum");    }
     ;
 
 struct_or_union_specifier
@@ -347,31 +342,27 @@ direct_declarator
     }
     | OPEN_PARANTHESES declarator CLOSE_PARANTHESES
     {
-        printf("ERROR: NOT SUPPORTED 1");
+        type_string[0] = '\0';
     }
     | direct_declarator OPEN_BRACKET constant_exp CLOSE_BRACKET
     {
-        printf("ERROR: NOT SUPPORTED 2");
+        type_string[0] = '\0';
     }
     | direct_declarator OPEN_BRACKET CLOSE_BRACKET
     {
-        printf("ERROR: NOT SUPPORTED 3");
+        type_string[0] = '\0';
     }
     | direct_declarator OPEN_PARANTHESES parameter_type_list CLOSE_PARANTHESES
     {
-        printf("ERROR: NOT SUPPORTED 4\n");
-        //printf("%s\n", type_string);
-        type_set = false;
-        strcpy(type_string, " ");
-       //printf("done mofo");
+        type_string[0] = '\0';
     }
     | direct_declarator OPEN_PARANTHESES identifier_list CLOSE_PARANTHESES
     {
-        printf("ERROR: NOT SUPPORTED 5");
+        type_string[0] = '\0';
     }
     | direct_declarator OPEN_PARANTHESES CLOSE_PARANTHESES
     {
-        printf("ERROR: NOT SUPPORTED 6");
+       type_string[0] = '\0';
     }
     ;
 
@@ -461,11 +452,11 @@ labeled_statement
 compound_statement
     : OPEN_BRACE CLOSE_BRACE
     {
-    printf("RROR: NOT SUPPORTED 1");
+    //printf("RROR: NOT SUPPORTED 1");
     }
     | OPEN_BRACE statement_list CLOSE_BRACE
     {
-    printf("RROR: NOT SUPPORTED 2");
+    //printf("RROR: NOT SUPPORTED 2");
     }
     ;
 
@@ -520,20 +511,20 @@ external_declaration
 function_definition
     : declaration_specifiers declarator declaration_list compound_statement
     {
-        printf("here finally 1\n");
+        //printf("here finally 1\n");
     }
     | declaration_specifiers declarator compound_statement
     {
-       printf("here finally 2\n");
+       //printf("here finally 2\n");
        //printf("%s", type_string);
     }
     | declarator declaration_list compound_statement
     {
-        printf("here finally 3\n");
+        //printf("here finally 3\n");
     }
     | declarator compound_statement
     {
-        printf("here finally 4\n");
+        //printf("here finally 4\n");
     }
     ;
 
