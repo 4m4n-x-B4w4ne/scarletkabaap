@@ -23,7 +23,7 @@ set(BISON_SOURCES
 add_executable(parser_bison ${BISON_SOURCES})
 set_basic_compile_options(parser_bison)
 
-target_include_directories(parser_bison PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(parser_bison PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_dependencies(
     parser_bison
