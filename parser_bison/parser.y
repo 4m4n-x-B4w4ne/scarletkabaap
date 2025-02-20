@@ -192,7 +192,6 @@ declaration
     : declaration_specifiers SEMICOLON
     | declaration_specifiers init_declarator_list SEMICOLON
     {
-        type_set = false;
         type_string[0] = '\0';
     }
     ;
@@ -307,10 +306,6 @@ type_qualifier
 
 declarator
     : pointer direct_declarator
-    {
-        // $2.type = strcat("pointer to ", $$.type);
-        //type_string = strcat("pointer to ", type_string);
-    }
     | direct_declarator
     ;
 
@@ -348,10 +343,10 @@ direct_declarator
     ;
 
 pointer
-    : ASTERISK
-    | ASTERISK type_qualifier_list
-    | ASTERISK pointer
-    | ASTERISK type_qualifier_list pointer
+    : ASTERISK{strcat(type_string, " pointer");}
+    | ASTERISK type_qualifier_list{strcat(type_string, " pointer");}
+    | ASTERISK pointer{strcat(type_string, " pointer");}
+    | ASTERISK type_qualifier_list pointer{strcat(type_string, " pointer");}
     ;
 
 type_qualifier_list
