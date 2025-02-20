@@ -331,8 +331,10 @@ direct_declarator
     {
         type_string[0] = '\0';
     }
-    | direct_declarator OPEN_PARANTHESES parameter_type_list CLOSE_PARANTHESES
-    {
+    | direct_declarator OPEN_PARANTHESES {
+        printf("aare vo function tha\n");
+        type_string[0] = '\0';
+    } parameter_type_list CLOSE_PARANTHESES{
         type_string[0] = '\0';
     }
     | direct_declarator OPEN_PARANTHESES identifier_list CLOSE_PARANTHESES
@@ -364,7 +366,9 @@ parameter_type_list
 
 parameter_list
     : parameter_declaration
-    | parameter_list COMMA parameter_declaration
+    | parameter_list COMMA{
+        type_string[0] = '\0';
+    } parameter_declaration
     ;
 
 parameter_declaration
@@ -430,13 +434,7 @@ labeled_statement
 
 compound_statement
     : OPEN_BRACE CLOSE_BRACE
-    {
-    //printf("RROR: NOT SUPPORTED 1");
-    }
     | OPEN_BRACE statement_list CLOSE_BRACE
-    {
-    //printf("RROR: NOT SUPPORTED 2");
-    }
     ;
 
 declaration_list
@@ -488,30 +486,10 @@ external_declaration
     ;
 
 function_definition
-    : declaration_specifiers declarator 
-    {
-        printf("the last one was a function :/ \n");
-        type_string[0] = '\0';
-    } 
-    declaration_list compound_statement
-    | declaration_specifiers declarator
-    {
-        printf("the last one was a function :/ \n");
-        type_string[0] = '\0';
-    } 
-    compound_statement
-    | declarator 
-    {
-        printf("the last one was a function :/ \n");
-        type_string[0] = '\0';
-    }
-    declaration_list compound_statement
-    | declarator
-    {
-        printf("the last one was a function :/ \n");
-        type_string[0] = '\0';
-    } 
-    compound_statement
+    : declaration_specifiers declarator declaration_list compound_statement
+    | declaration_specifiers declarator compound_statement
+    | declarator declaration_list compound_statement
+    | declarator compound_statement
     ;
 
 %%
