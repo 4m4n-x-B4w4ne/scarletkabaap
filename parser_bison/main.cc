@@ -3,6 +3,8 @@
 #include <token/token.hh>
 #include <memory>
 
+const char* identifier;
+
 void yyerror(const char* s) {
     fprintf(stderr, "Error: %s\n", s);
 }
@@ -32,6 +34,7 @@ int yylex() {
     // Map your token types to Bison token types
    switch (token_type) {
         case scarlet::token::TOKEN::IDENTIFIER:
+            identifier  = current_token.get_value().value().c_str();
             return IDENTIFIER;
         case scarlet::token::TOKEN::CONSTANT:
             return CONSTANT;
@@ -203,8 +206,5 @@ int main(){
     get_tokens("input.cc");
 
     yyparse();
-    for(auto it:symtab){
-        std::cout<<it.first<<" "<<it.second<<std::endl;
-    }
     return 0;
 }

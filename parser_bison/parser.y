@@ -1,27 +1,19 @@
 %{
 #include <stdio.h>
+#include <stdlib.h>
 #include <map>
 #include <string>
 #include<string.h>
 
-struct symbolInfo{
-    char* name;
-    char* type;
-};
-
-std::map<std::string,std::string> symtab;
-
-void add_symbol(std::string name, std::string type) {
-    symtab[name] = type;
-}
-
 int yylex();
 void yyerror(const char* s);
+
+char type_string[1000];
+bool type_set = false;
+extern const char* identifier;
 %}
 
 %union {
-    symbolInfo symbol;
-    char* str;
 }
 
 /* Keep all original tokens and add your specific ones */
@@ -45,11 +37,6 @@ void yyerror(const char* s);
 %token COMPOUND_AND COMPOUND_XOR COMPOUND_OR
 %token NOT LAND LOR
 %token EQUAL NOTEQUAL LESSTHAN GREATERTHAN LESSTHANEQUAL GREATERTHANEQUAL
-
-%type <symbol> translation_unit external_declaration declaration type_specifier 
-%type <symbol> declarator direct_declarator pointer parameter_type_list identifier_list constant_exp
-%type <symbol> enumerator_list enumerator init_declarator_list  storage_class_specifier
-%type <symbol> declaration_specifiers type_qualifier init_declarator
 
 
 %precedence THEN
@@ -205,128 +192,60 @@ declaration
     : declaration_specifiers SEMICOLON
     | declaration_specifiers init_declarator_list SEMICOLON
     {
-        $2.type = $1.type;
+        type_string[0] = '\0';
     }
     ;
 
 declaration_specifiers
     : storage_class_specifier
-    {
-        $$.type = $1.type;
-    }
     | storage_class_specifier declaration_specifiers
-    {
-        $$.type = strcat($1.type,$2.type);
-    }
     | type_specifier
-    {
-        $$.type = $1.type;
-    }
     | type_specifier declaration_specifiers
-    {
-        $$.type = strcat($1.type,$2.type);
-    }
     | type_qualifier
-    {
-        $$.type = $1.type;
-    }
     | type_qualifier declaration_specifiers
-    {
-        $$.type = strcat($1.type,$2.type);
-    }
     ;
 
 init_declarator_list
     : init_declarator
-    {
-        $1.type = $$.type;
-    }
     | init_declarator_list COMMA init_declarator
-    {
-        $1.type = $$.type;
-        $3.type = $$.type;
-    }
     ;
 
 init_declarator
     : declarator
-    {
-        $1.type = $$.type;
-        add_symbol($1.name, $1.type);
-    }
     | declarator ASSIGNMENT initializer
-    {
-        $1.type = $$.type;
-        add_symbol($1.name, $1.type);
-    }
     ;
 
 storage_class_specifier
-    : TYPEDEF
-    {
-        $$.type = "typedef";
-    }
-    | EXTERN
-    {
-        $$.type = "typedef";
-    }
-    | STATIC
-    {
-        $$.type = "typedef";
-    }
-    | AUTO
-    {
-        $$.type = "typedef";
-    }
-    | REGISTER
-    {
-        $$.type = "typedef";
-    }
+    : TYPEDEF{strcat(type_string, " typedef");}
+    | EXTERN{strcat(type_string, " extern");    }
+    | STATIC{strcat(type_string, " static");    }
+    | AUTO{strcat(type_string, " auto");    }
+    | REGISTER{strcat(type_string, " register");    }
     ;
 
 type_specifier
-    : VOID
-    {
-        $$.type = "typedef";
-    }
-    | CHAR
-    {
-        $$.type = "typedef";
-    }
-    | INT
-    {
-        $$.type = "typedef";
-    }
-    | LONG
-    {
-        $$.type = "typedef";
-    }
-    | SIGNED
-    {
-        $$.type = "typedef";
-    }
-    | UNSIGNED
-    {
-        $$.type = "typedef";
-    }
-    | DOUBLE
-    {
-        $$.type = "typedef";
-    }
+    : VOID{strcat(type_string, " void");    }
+    | CHAR{strcat(type_string, " char");    }
+    | INT{strcat(type_string, " int");    }
+    | LONG{strcat(type_string, " long");    }
+    | SIGNED{strcat(type_string, " signed");    }
+    | UNSIGNED{strcat(type_string, " unsigned");    }
+    | DOUBLE{strcat(type_string, " double");    }
     | struct_or_union_specifier
-    {
-        $$.type = "typedef";
-    }
     | enum_specifier
-    {
-        $$.type = "typedef";
-    }
     ;
 
 struct_or_union_specifier
-    : struct_or_union IDENTIFIER OPEN_BRACE struct_declaration_list CLOSE_BRACE
-    | struct_or_union OPEN_BRACE struct_declaration_list CLOSE_BRACE
+    : struct_or_union IDENTIFIER 
+    {
+        printf("struct, %s\n", identifier);
+    }
+    OPEN_BRACE struct_declaration_list CLOSE_BRACE
+    | struct_or_union OPEN_BRACE struct_declaration_list CLOSE_BRACE 
     | struct_or_union IDENTIFIER
+    {
+        printf("struct, %s\n", identifier);
+    }
     ;
 
 struct_or_union
@@ -341,6 +260,9 @@ struct_declaration_list
 
 struct_declaration
     : specifier_qualifier_list struct_declarator_list SEMICOLON
+    {
+        type_string[0] = '\0';
+    }
     ;
 
 specifier_qualifier_list
@@ -389,19 +311,42 @@ declarator
 
 direct_declarator
     : IDENTIFIER
+    {
+        printf("%s, %s\n", type_string, identifier);
+    }
     | OPEN_PARANTHESES declarator CLOSE_PARANTHESES
+    {
+        type_string[0] = '\0';
+    }
     | direct_declarator OPEN_BRACKET constant_exp CLOSE_BRACKET
+    {
+        type_string[0] = '\0';
+    }
     | direct_declarator OPEN_BRACKET CLOSE_BRACKET
-    | direct_declarator OPEN_PARANTHESES parameter_type_list CLOSE_PARANTHESES
+    {
+        type_string[0] = '\0';
+    }
+    | direct_declarator OPEN_PARANTHESES {
+        printf("aare vo function tha\n");
+        type_string[0] = '\0';
+    } parameter_type_list CLOSE_PARANTHESES{
+        type_string[0] = '\0';
+    }
     | direct_declarator OPEN_PARANTHESES identifier_list CLOSE_PARANTHESES
+    {
+        type_string[0] = '\0';
+    }
     | direct_declarator OPEN_PARANTHESES CLOSE_PARANTHESES
+    {
+       type_string[0] = '\0';
+    }
     ;
 
 pointer
-    : ASTERISK
-    | ASTERISK type_qualifier_list
-    | ASTERISK pointer
-    | ASTERISK type_qualifier_list pointer
+    : ASTERISK{strcat(type_string, " pointer");}
+    | ASTERISK type_qualifier_list{strcat(type_string, " pointer");}
+    | ASTERISK pointer{strcat(type_string, " pointer");}
+    | ASTERISK type_qualifier_list pointer{strcat(type_string, " pointer");}
     ;
 
 type_qualifier_list
@@ -416,7 +361,9 @@ parameter_type_list
 
 parameter_list
     : parameter_declaration
-    | parameter_list COMMA parameter_declaration
+    | parameter_list COMMA{
+        type_string[0] = '\0';
+    } parameter_declaration
     ;
 
 parameter_declaration
@@ -471,6 +418,7 @@ statement
     | selection_statement
     | iteration_statement
     | jump_statement
+    | declaration
     ;
 
 labeled_statement
@@ -482,8 +430,6 @@ labeled_statement
 compound_statement
     : OPEN_BRACE CLOSE_BRACE
     | OPEN_BRACE statement_list CLOSE_BRACE
-    | OPEN_BRACE declaration_list CLOSE_BRACE
-    | OPEN_BRACE declaration_list statement_list CLOSE_BRACE
     ;
 
 declaration_list
@@ -511,7 +457,9 @@ iteration_statement
     : WHILE OPEN_PARANTHESES exp CLOSE_PARANTHESES statement
     | DO statement WHILE OPEN_PARANTHESES exp CLOSE_PARANTHESES SEMICOLON
     | FOR OPEN_PARANTHESES expression_statement expression_statement CLOSE_PARANTHESES statement
+    | FOR OPEN_PARANTHESES declaration expression_statement CLOSE_PARANTHESES statement
     | FOR OPEN_PARANTHESES expression_statement expression_statement exp CLOSE_PARANTHESES statement
+    | FOR OPEN_PARANTHESES declaration expression_statement exp CLOSE_PARANTHESES statement
     ;
 
 jump_statement
@@ -534,20 +482,9 @@ external_declaration
 
 function_definition
     : declaration_specifiers declarator declaration_list compound_statement
-    {
-    }
     | declaration_specifiers declarator compound_statement
-    {
-       
-    }
     | declarator declaration_list compound_statement
-    {
-        
-    }
     | declarator compound_statement
-    {
-        
-    }
     ;
 
 %%
