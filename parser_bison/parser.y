@@ -1,27 +1,19 @@
 %{
 #include <stdio.h>
+#include <stdlib.h>
 #include <map>
 #include <string>
 #include<string.h>
 
-struct symbolInfo{
-    char* name;
-    char* type;
-};
-
-std::map<std::string,std::string> symtab;
-
-void add_symbol(std::string name, std::string type) {
-    symtab[name] = type;
-}
-
 int yylex();
 void yyerror(const char* s);
+
+char type_string[1000];
+bool type_set = false;
+// extern char* identifier;
 %}
 
 %union {
-    symbolInfo symbol;
-    char* str;
 }
 
 /* Keep all original tokens and add your specific ones */
@@ -205,122 +197,79 @@ declaration
     : declaration_specifiers SEMICOLON
     | declaration_specifiers init_declarator_list SEMICOLON
     {
-        $2.type = $1.type;
+        type_set = false;
+        strcpy(type_string, " ");
+        //printf("done mofo");
     }
     ;
 
 declaration_specifiers
     : storage_class_specifier
-    {
-        $$.type = $1.type;
-    }
     | storage_class_specifier declaration_specifiers
-    {
-        $$.type = strcat($1.type,$2.type);
-    }
     | type_specifier
-    {
-        $$.type = $1.type;
-    }
     | type_specifier declaration_specifiers
-    {
-        $$.type = strcat($1.type,$2.type);
-    }
     | type_qualifier
-    {
-        $$.type = $1.type;
-    }
     | type_qualifier declaration_specifiers
-    {
-        $$.type = strcat($1.type,$2.type);
-    }
     ;
 
 init_declarator_list
     : init_declarator
-    {
-        $1.type = $$.type;
-    }
     | init_declarator_list COMMA init_declarator
-    {
-        $1.type = $$.type;
-        $3.type = $$.type;
-    }
     ;
 
 init_declarator
     : declarator
-    {
-        $1.type = $$.type;
-        add_symbol($1.name, $1.type);
-    }
     | declarator ASSIGNMENT initializer
-    {
-        $1.type = $$.type;
-        add_symbol($1.name, $1.type);
-    }
     ;
 
 storage_class_specifier
     : TYPEDEF
     {
-        $$.type = "typedef";
+        strcat(type_string, " typedef");
     }
     | EXTERN
     {
-        $$.type = "typedef";
-    }
+strcat(type_string, " typedef");    }
     | STATIC
     {
-        $$.type = "typedef";
-    }
+strcat(type_string, " typedef");    }
     | AUTO
     {
-        $$.type = "typedef";
-    }
+strcat(type_string, " typedef");    }
     | REGISTER
     {
-        $$.type = "typedef";
-    }
+strcat(type_string, " typedef");    }
     ;
 
 type_specifier
     : VOID
     {
-        $$.type = "typedef";
-    }
+strcat(type_string, " typedef");    }
     | CHAR
     {
-        $$.type = "typedef";
-    }
+strcat(type_string, " typedef");    }
     | INT
     {
-        $$.type = "typedef";
-    }
+        
+strcat(type_string, " typedef");    }
     | LONG
     {
-        $$.type = "typedef";
-    }
+strcat(type_string, " typedef");    }
     | SIGNED
     {
-        $$.type = "typedef";
-    }
+strcat(type_string, " typedef");    }
     | UNSIGNED
     {
-        $$.type = "typedef";
-    }
+strcat(type_string, " typedef");    }
     | DOUBLE
     {
-        $$.type = "typedef";
-    }
+strcat(type_string, " typedef");    }
     | struct_or_union_specifier
     {
-        $$.type = "typedef";
-    }
+strcat(type_string, " typedef");    }
     | enum_specifier
     {
-        $$.type = "typedef";
-    }
+strcat(type_string, " typedef");    }
     ;
 
 struct_or_union_specifier
@@ -384,17 +333,46 @@ type_qualifier
 
 declarator
     : pointer direct_declarator
+    {
+        // $2.type = strcat("pointer to ", $$.type);
+        //type_string = strcat("pointer to ", type_string);
+    }
     | direct_declarator
     ;
 
 direct_declarator
     : IDENTIFIER
+    {
+        printf("%s\n", type_string);
+    }
     | OPEN_PARANTHESES declarator CLOSE_PARANTHESES
+    {
+        printf("ERROR: NOT SUPPORTED 1");
+    }
     | direct_declarator OPEN_BRACKET constant_exp CLOSE_BRACKET
+    {
+        printf("ERROR: NOT SUPPORTED 2");
+    }
     | direct_declarator OPEN_BRACKET CLOSE_BRACKET
+    {
+        printf("ERROR: NOT SUPPORTED 3");
+    }
     | direct_declarator OPEN_PARANTHESES parameter_type_list CLOSE_PARANTHESES
+    {
+        printf("ERROR: NOT SUPPORTED 4\n");
+        //printf("%s\n", type_string);
+        type_set = false;
+        strcpy(type_string, " ");
+       //printf("done mofo");
+    }
     | direct_declarator OPEN_PARANTHESES identifier_list CLOSE_PARANTHESES
+    {
+        printf("ERROR: NOT SUPPORTED 5");
+    }
     | direct_declarator OPEN_PARANTHESES CLOSE_PARANTHESES
+    {
+        printf("ERROR: NOT SUPPORTED 6");
+    }
     ;
 
 pointer
@@ -471,6 +449,7 @@ statement
     | selection_statement
     | iteration_statement
     | jump_statement
+    | declaration
     ;
 
 labeled_statement
@@ -481,9 +460,13 @@ labeled_statement
 
 compound_statement
     : OPEN_BRACE CLOSE_BRACE
+    {
+    printf("RROR: NOT SUPPORTED 1");
+    }
     | OPEN_BRACE statement_list CLOSE_BRACE
-    | OPEN_BRACE declaration_list CLOSE_BRACE
-    | OPEN_BRACE declaration_list statement_list CLOSE_BRACE
+    {
+    printf("RROR: NOT SUPPORTED 2");
+    }
     ;
 
 declaration_list
@@ -511,7 +494,9 @@ iteration_statement
     : WHILE OPEN_PARANTHESES exp CLOSE_PARANTHESES statement
     | DO statement WHILE OPEN_PARANTHESES exp CLOSE_PARANTHESES SEMICOLON
     | FOR OPEN_PARANTHESES expression_statement expression_statement CLOSE_PARANTHESES statement
+    | FOR OPEN_PARANTHESES declaration expression_statement CLOSE_PARANTHESES statement
     | FOR OPEN_PARANTHESES expression_statement expression_statement exp CLOSE_PARANTHESES statement
+    | FOR OPEN_PARANTHESES declaration expression_statement exp CLOSE_PARANTHESES statement
     ;
 
 jump_statement
@@ -535,18 +520,20 @@ external_declaration
 function_definition
     : declaration_specifiers declarator declaration_list compound_statement
     {
+        printf("here finally 1\n");
     }
     | declaration_specifiers declarator compound_statement
     {
-       
+       printf("here finally 2\n");
+       //printf("%s", type_string);
     }
     | declarator declaration_list compound_statement
     {
-        
+        printf("here finally 3\n");
     }
     | declarator compound_statement
     {
-        
+        printf("here finally 4\n");
     }
     ;
 
