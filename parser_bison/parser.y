@@ -4,13 +4,13 @@
 #include <map>
 #include <string>
 #include<string.h>
+#include<iostream>
 
 int yylex();
 void yyerror(const char* s);
 
-char type_string[1000];
-bool type_set = false;
-extern const char* identifier;
+std::string type_string;
+extern std::string identifier;
 %}
 
 %union {
@@ -192,7 +192,7 @@ declaration
     : declaration_specifiers SEMICOLON
     | declaration_specifiers init_declarator_list SEMICOLON
     {
-        type_string[0] = '\0';
+        type_string = "";
     }
     ;
 
@@ -216,21 +216,21 @@ init_declarator
     ;
 
 storage_class_specifier
-    : TYPEDEF{strcat(type_string, " typedef");}
-    | EXTERN{strcat(type_string, " extern");    }
-    | STATIC{strcat(type_string, " static");    }
-    | AUTO{strcat(type_string, " auto");    }
-    | REGISTER{strcat(type_string, " register");    }
+    : TYPEDEF{type_string += " typedef";}
+    | EXTERN{type_string += " extern";}
+    | STATIC{type_string += " static"; }
+    | AUTO{type_string += " auto";}
+    | REGISTER{type_string += " register";}
     ;
 
 type_specifier
-    : VOID{strcat(type_string, " void");    }
-    | CHAR{strcat(type_string, " char");    }
-    | INT{strcat(type_string, " int");    }
-    | LONG{strcat(type_string, " long");    }
-    | SIGNED{strcat(type_string, " signed");    }
-    | UNSIGNED{strcat(type_string, " unsigned");    }
-    | DOUBLE{strcat(type_string, " double");    }
+    : VOID{type_string += " void";}
+    | CHAR{type_string += " char";}
+    | INT{type_string += " int";}
+    | LONG{type_string += " long";}
+    | SIGNED{type_string += " signed";}
+    | UNSIGNED{type_string += " unsigned";}
+    | DOUBLE{type_string += " double";}
     | struct_or_union_specifier
     | enum_specifier
     ;
@@ -238,13 +238,13 @@ type_specifier
 struct_or_union_specifier
     : struct_or_union IDENTIFIER 
     {
-        printf("struct, %s\n", identifier);
+        std::cout<<"struct"<<" , "<<identifier<<std::endl;
     }
     OPEN_BRACE struct_declaration_list CLOSE_BRACE
     | struct_or_union OPEN_BRACE struct_declaration_list CLOSE_BRACE 
     | struct_or_union IDENTIFIER
     {
-        printf("struct, %s\n", identifier);
+       std::cout<<"struct"<<" , "<<identifier<<std::endl;
     }
     ;
 
@@ -261,7 +261,7 @@ struct_declaration_list
 struct_declaration
     : specifier_qualifier_list struct_declarator_list SEMICOLON
     {
-        type_string[0] = '\0';
+        type_string = "";
     }
     ;
 
@@ -312,41 +312,41 @@ declarator
 direct_declarator
     : IDENTIFIER
     {
-        printf("%s, %s\n", type_string, identifier);
+       std::cout<<type_string<<" , "<<identifier<<std::endl;
     }
     | OPEN_PARANTHESES declarator CLOSE_PARANTHESES
     {
-        type_string[0] = '\0';
+        type_string = "";
     }
     | direct_declarator OPEN_BRACKET constant_exp CLOSE_BRACKET
     {
-        type_string[0] = '\0';
+        type_string = "";
     }
     | direct_declarator OPEN_BRACKET CLOSE_BRACKET
     {
-        type_string[0] = '\0';
+        type_string = "";
     }
     | direct_declarator OPEN_PARANTHESES {
         printf("aare vo function tha\n");
-        type_string[0] = '\0';
+        type_string = "";
     } parameter_type_list CLOSE_PARANTHESES{
-        type_string[0] = '\0';
+       type_string = "";
     }
     | direct_declarator OPEN_PARANTHESES identifier_list CLOSE_PARANTHESES
     {
-        type_string[0] = '\0';
+       type_string = "";
     }
     | direct_declarator OPEN_PARANTHESES CLOSE_PARANTHESES
     {
-       type_string[0] = '\0';
+       type_string = "";
     }
     ;
 
 pointer
-    : ASTERISK{strcat(type_string, " pointer");}
-    | ASTERISK type_qualifier_list{strcat(type_string, " pointer");}
-    | ASTERISK pointer{strcat(type_string, " pointer");}
-    | ASTERISK type_qualifier_list pointer{strcat(type_string, " pointer");}
+    : ASTERISK{type_string+= " pointer";}
+    | ASTERISK type_qualifier_list{type_string+= " pointer";}
+    | ASTERISK pointer{type_string+= " pointer";}
+    | ASTERISK type_qualifier_list pointer{type_string+= " pointer";}
     ;
 
 type_qualifier_list
@@ -362,7 +362,7 @@ parameter_type_list
 parameter_list
     : parameter_declaration
     | parameter_list COMMA{
-        type_string[0] = '\0';
+       type_string = "";
     } parameter_declaration
     ;
 

@@ -3,7 +3,7 @@
 #include <token/token.hh>
 #include <memory>
 
-const char* identifier;
+std::string identifier;
 
 void yyerror(const char* s) {
     fprintf(stderr, "Error: %s\n", s);
