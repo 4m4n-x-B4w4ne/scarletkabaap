@@ -286,18 +286,6 @@ public:
   }
 };
 
-class AST_case_statement_Node : public AST_Statement_Node {
-private:
-  std::vector<std::shared_ptr<AST_Statement_Node>> stmts;
-
-public:
-  std::string get_AST_name() { return "CaseStatement"; }
-  std::vector<std::shared_ptr<AST_Statement_Node>> get_stmt() { return stmts; }
-  void set_stmt(std::shared_ptr<AST_Statement_Node> stmt) {
-    this->stmts.push_back(std::move(stmt));
-  }
-};
-
 enum class DeclarationType { INT };
 
 class AST_Declaration_Node {
@@ -443,6 +431,52 @@ public:
   }
   void add_function(std::shared_ptr<AST_Function_Node> function) {
     functions.emplace_back(std::move(function));
+  }
+};
+class AST_switch_statement_Node : public AST_Statement_Node {
+private:
+  std::shared_ptr<AST_Statement_Node> stmt;
+  std::vector<std::pair<std::shared_ptr<ast::AST_exp_Node>,
+                        std::shared_ptr<ast::AST_identifier_Node>>>
+      case_exp_label;
+  bool has_default_case = false;
+
+public:
+  std::string get_AST_name() { return "Switch Statement"; }
+  std::shared_ptr<AST_Statement_Node> get_stmt() { return stmt; }
+  void set_stmt(std::shared_ptr<AST_Statement_Node> stmt) {
+    this->stmt = std::move(stmt);
+  }
+  void set_case_exp_label(std::shared_ptr<ast::AST_exp_Node> exp,
+                          std::shared_ptr<ast::AST_identifier_Node> label) {
+    this->case_exp_label.push_back(
+        std::make_pair(std::move(exp), std::move(label)));
+  }
+  std::vector<std::pair<std::shared_ptr<ast::AST_exp_Node>,
+                        std::shared_ptr<ast::AST_identifier_Node>>>
+  get_case_exp_label() {
+    return case_exp_label;
+  }
+  void set_has_default_case(bool has_default_case) {
+    this->has_default_case = has_default_case;
+  }
+  bool get_has_default_case() { return has_default_case; }
+};
+
+class AST_case_statement_Node : public AST_Statement_Node {
+private:
+  // std::vector<std::shared_ptr<AST_Block_Item_Node>> stmts;
+  std::string case_label;
+
+public:
+  std::string get_AST_name() { return "CaseStatement"; }
+  // std::vector<std::shared_ptr<AST_Block_Item_Node>> get_stmt() { return
+  // stmts; } void set_stmt(std::shared_ptr<AST_Block_Item_Node> stmt) {
+  //   this->stmts.push_back(std::move(stmt));
+  // }
+  std::string get_case_label() { return case_label; }
+  void set_case_label(std::string &&case_label) {
+    this->case_label = std::move(case_label);
   }
 };
 } // namespace ast

@@ -105,8 +105,9 @@ void parser::parse_statement(
     statement =
         std::static_pointer_cast<ast::AST_Statement_Node>(while_statement);
   } else if (tokens[0].get_token() == token::TOKEN::SWITCH) {
-    MAKE_SHARED(ast::AST_while_statement_Node, switch_statement);
+    MAKE_SHARED(ast::AST_switch_statement_Node, switch_statement);
     switch_statement->set_type(ast::statementType::SWITCH);
+    switch_stack.push(switch_statement);
     tokens.erase(tokens.begin());
     switch_statement->set_labels(get_switch_loop_labels());
     EXPECT(token::TOKEN::OPEN_PARANTHESES);
@@ -117,10 +118,10 @@ void parser::parse_statement(
     MAKE_SHARED(ast::AST_Statement_Node, stmt);
     parse_statement(tokens, stmt);
     switch_statement->set_stmt(std::move(stmt));
-
     remove_switch_loop_labels();
     statement =
         std::static_pointer_cast<ast::AST_Statement_Node>(switch_statement);
+    switch_stack.pop();
 
   } else if (tokens[0].get_token() == token::TOKEN::CASE) {
     MAKE_SHARED(ast::AST_case_statement_Node, case_statement);
@@ -128,28 +129,88 @@ void parser::parse_statement(
     tokens.erase(tokens.begin());
     MAKE_SHARED(ast::AST_exp_Node, exp);
     parse_exp(tokens, exp);
-    case_statement->set_exp(std::move(exp));
-    EXPECT(token::TOKEN::COLON);
-    while (success && tokens[0].get_token() != token::TOKEN::CASE &&
-           tokens[0].get_token() != token::TOKEN::CLOSE_BRACE &&
-           tokens[0].get_token() != token::TOKEN::DEFAULT_CASE) {
-      MAKE_SHARED(ast::AST_Statement_Node, stmt);
-      parse_statement(tokens, stmt);
-      case_statement->set_stmt(std::move(stmt));
+    if (exp->get_factor_node() == nullptr and
+        exp->get_binop_node() == nullptr) {
+      error_messages.emplace_back("case expression is empty");
+      success = false;
     }
+    // case_statement->set_exp(std::move(exp));
+    case_statement->set_labels({get_case_label(), nullptr});
+    MAKE_SHARED(ast::AST_identifier_Node, label);
+    label = case_statement->get_labels().first;
+    if (switch_stack.empty()) {
+      error_messages.emplace_back(
+          "default case found outside of switch construct");
+      success = false;
+    } else {
+      switch_stack.top()->set_case_exp_label(exp, label);
+    }
+    EXPECT(token::TOKEN::COLON);
+    // while (success && tokens[0].get_token() != token::TOKEN::CASE &&
+    //        tokens[0].get_token() != token::TOKEN::CLOSE_BRACE &&
+    //        tokens[0].get_token() != token::TOKEN::DEFAULT_CASE &&
+    //        tokens[0].get_token() != token::TOKEN::SEMICOLON) {
+    //   MAKE_SHARED(ast::AST_Statement_Node, stmt);
+    //   if (tokens[0].get_token() == token::TOKEN::INT) {
+    //     MAKE_SHARED(ast::AST_Declaration_Node, declaration);
+    //     parse_declaration(tokens, declaration);
+    //     MAKE_SHARED(ast::AST_Block_Item_Node, block_item);
+    //     block_item->set_type(ast::BlockItemType::DECLARATION);
+    //     block_item->set_declaration(std::move(declaration));
+    //     case_statement->set_stmt(std::move(block_item));
+    //   } else {
+    //     parse_statement(tokens, stmt);
+    //     MAKE_SHARED(ast::AST_Block_Item_Node, block_item);
+    //     block_item->set_type(ast::BlockItemType::STATEMENT);
+    //     block_item->set_statement(std::move(stmt));
+    //     case_statement->set_stmt(std::move(block_item));
+    //   }
+    // }
     statement =
         std::static_pointer_cast<ast::AST_Statement_Node>(case_statement);
   } else if (tokens[0].get_token() == token::TOKEN::DEFAULT_CASE) {
     MAKE_SHARED(ast::AST_case_statement_Node, default_case_statement);
     default_case_statement->set_type(ast::statementType::DEFAULT_CASE);
+    default_case_statement->set_labels({get_case_label(), nullptr});
     tokens.erase(tokens.begin());
-    EXPECT(token::TOKEN::COLON);
-    while (success && tokens[0].get_token() != token::TOKEN::CASE &&
-           tokens[0].get_token() != token::TOKEN::CLOSE_BRACE) {
-      MAKE_SHARED(ast::AST_Statement_Node, stmt);
-      parse_statement(tokens, stmt);
-      default_case_statement->set_stmt(std::move(stmt));
+    MAKE_SHARED(ast::AST_identifier_Node, label);
+    label = default_case_statement->get_labels().first;
+    if (switch_stack.empty()) {
+      error_messages.emplace_back(
+          "default case found outside of switch construct");
+      success = false;
+    } else {
+      if (switch_stack.top()->get_has_default_case()) {
+        success = false;
+        error_messages.emplace_back(
+            "Multiple default cases found in switch construct");
+      } else {
+        switch_stack.top()->set_has_default_case(true);
+        switch_stack.top()->set_case_exp_label(nullptr, label);
+      }
     }
+    EXPECT(token::TOKEN::COLON);
+
+    // while (success && tokens[0].get_token() != token::TOKEN::CASE &&
+    //        tokens[0].get_token() != token::TOKEN::CLOSE_BRACE &&
+    //        tokens[0].get_token() != token::TOKEN::SEMICOLON) {
+    //   MAKE_SHARED(ast::AST_Statement_Node, stmt);
+
+    //   if (tokens[0].get_token() == token::TOKEN::INT) {
+    //     MAKE_SHARED(ast::AST_Declaration_Node, declaration);
+    //     parse_declaration(tokens, declaration);
+    //     MAKE_SHARED(ast::AST_Block_Item_Node, block_item);
+    //     block_item->set_type(ast::BlockItemType::DECLARATION);
+    //     block_item->set_declaration(std::move(declaration));
+    //     default_case_statement->set_stmt(std::move(block_item));
+    //   } else {
+    //     parse_statement(tokens, stmt);
+    //     MAKE_SHARED(ast::AST_Block_Item_Node, block_item);
+    //     block_item->set_type(ast::BlockItemType::STATEMENT);
+    //     block_item->set_statement(std::move(stmt));
+    //     default_case_statement->set_stmt(std::move(block_item));
+    //   }
+    // }
     statement = std::static_pointer_cast<ast::AST_Statement_Node>(
         default_case_statement);
 
